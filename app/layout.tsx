@@ -11,6 +11,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import Provider from "./provider";
 import { AppSidebar } from "@/app/components/Appsidebar";
 import { PresenceHeartbeat } from "./components/PresenceHeartbeat";
+import { AppearanceProvider } from "./context/AppearanceContext";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -37,20 +38,22 @@ export default function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <ConvexClientProvider>
               <Provider>
-                <PresenceHeartbeat />
-                <SidebarProvider>
-                  <div className="flex min-h-screen w-full flex-col">
-                    <Navbar />
-                    <div className="flex flex-1 overflow-hidden">
-                      <AppSidebar />
-                      <SidebarInset className="flex-1 overflow-auto">
-                        <main className="p-4 lg:p-6">{children}</main>
-                      </SidebarInset>
+                <AppearanceProvider>
+                  <PresenceHeartbeat />
+                  <SidebarProvider>
+                    <div className="flex min-h-screen w-full flex-col">
+                      <Navbar />
+                      <div className="flex flex-1 overflow-hidden">
+                        <AppSidebar />
+                        <SidebarInset className="flex-1 overflow-auto">
+                          <main className="p-4 lg:p-6">{children}</main>
+                        </SidebarInset>
+                      </div>
                     </div>
-                  </div>
-                </SidebarProvider>
+                  </SidebarProvider>
 
-                <Toaster richColors />
+                  <Toaster richColors />
+                </AppearanceProvider>
               </Provider>
             </ConvexClientProvider>
           </ThemeProvider>

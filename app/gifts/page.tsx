@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { GIFT_CATALOG } from "@/convex/gifts";
+import { GIFT_CATALOG } from "@/lib/gifts";
 import { ChevronRight, Loader2 } from "lucide-react";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 
