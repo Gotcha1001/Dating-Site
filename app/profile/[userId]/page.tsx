@@ -80,11 +80,11 @@ export default function OtherProfilePage({
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-start gap-2">
         <button
           onClick={handleMessage}
           disabled={isMessaging}
-          className="flex items-center gap-2 rounded-full bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
+          className="flex shrink-0 items-center gap-2 rounded-full bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-500 disabled:opacity-60"
         >
           <MessageCircle size={16} /> Message
         </button>
