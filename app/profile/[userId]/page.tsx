@@ -9,6 +9,8 @@ import { MessageCircle, Loader2, MapPin } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { CallBookingButton } from "@/app/components/CallBookingButton";
 import { GiftPicker } from "@/app/components/GiftPicker";
+import { ProfileCarousel } from "@/app/components/ProfileCarousel";
+import { OnlineIndicator } from "@/app/components/OnlineIndicator";
 
 interface OtherProfilePageProps {
   params: Promise<{ userId: string }>;
@@ -55,17 +57,16 @@ export default function OtherProfilePage({
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
-      <div className="grid grid-cols-3 gap-2">
-        {profile.photos.map((photo) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={photo.publicId}
-            src={photo.url}
-            alt={profile.displayName}
-            className="aspect-square w-full rounded-xl object-cover"
+      <ProfileCarousel
+        photos={profile.photos}
+        alt={profile.displayName}
+        badge={
+          <OnlineIndicator
+            lastActiveAt={profile.lastActiveAt}
+            variant="overlay"
           />
-        ))}
-      </div>
+        }
+      />
 
       <div>
         <h1 className="text-2xl font-semibold">

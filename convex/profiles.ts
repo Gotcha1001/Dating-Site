@@ -178,3 +178,25 @@ export const searchProfiles = query({
     return { hasProfile: true, results };
   },
 });
+
+// Minimum gap between real writes, so extra tabs / focus events don't
+// hammer the database or re-trigger every subscribed query needlessly.
+const PRESENCE_WRITE_THROTTLE_MS = 30_000;
+
+// Called by the client heartbeat (see hooks/usePresenceHeartbeat.ts).
+export const touchPresence = mutation({
+  args: {},
+  handler: async (ctx): Promise<void> => {
+    const user = await requireCurrentUser(ctx);
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .first();
+    if (!profile) return; // not onboarded yet, nothing to mark
+
+    const now = Date.now();
+    if (now - profile.lastActiveAt < PRESENCE_WRITE_THROTTLE_MS) return;
+
+    await ctx.db.patch(profile._id, { lastActiveAt: now });
+  },
+});

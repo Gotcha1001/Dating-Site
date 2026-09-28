@@ -4,6 +4,8 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { Loader2, Pencil } from "lucide-react";
+import { ProfileCarousel } from "@/app/components/ProfileCarousel";
+import { OnlineIndicator } from "@/app/components/OnlineIndicator";
 
 export default function MyProfilePage(): React.JSX.Element {
   const profile = useQuery(api.profiles.getMyProfile);
@@ -34,16 +36,17 @@ export default function MyProfilePage(): React.JSX.Element {
 
   return (
     <div className="mx-auto max-w-lg">
-      <div className="mb-4 grid grid-cols-3 gap-2">
-        {profile.photos.map((photo) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={photo.publicId}
-            src={photo.url}
-            alt={profile.displayName}
-            className="aspect-square w-full rounded-xl object-cover"
-          />
-        ))}
+      <div className="mb-4">
+        <ProfileCarousel
+          photos={profile.photos}
+          alt={profile.displayName}
+          badge={
+            <OnlineIndicator
+              lastActiveAt={profile.lastActiveAt}
+              variant="overlay"
+            />
+          }
+        />
       </div>
 
       <div className="flex items-start justify-between">

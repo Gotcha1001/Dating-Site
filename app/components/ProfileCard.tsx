@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import type { Doc } from "@/convex/_generated/dataModel";
+import { OnlineIndicator } from "./OnlineIndicator";
 
 interface ProfileCardProps {
   profile: Doc<"profiles">;
@@ -33,7 +34,16 @@ export function ProfileCard({
             💫
           </div>
         )}
+
+        <div className="absolute left-2 top-2">
+          <OnlineIndicator
+            lastActiveAt={profile.lastActiveAt}
+            variant="overlay"
+            showLabel={false}
+          />
+        </div>
       </div>
+
       <div className="p-3">
         <p className="font-semibold text-black dark:text-white">
           {profile.displayName}, {profile.age}
