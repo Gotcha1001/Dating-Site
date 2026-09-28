@@ -2,26 +2,10 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireCurrentUser } from "./lib/auth";
 import type { Doc, Id } from "./_generated/dataModel";
-
-export interface GiftDefinition {
-  id: string;
-  name: string;
-  emoji: string;
-  coinCost: number;
-}
-
-// Static catalog — no table needed since these never change per-user.
-export const GIFT_CATALOG: GiftDefinition[] = [
-  { id: "rose", name: "Rose", emoji: "🌹", coinCost: 10 },
-  { id: "chocolate", name: "Chocolates", emoji: "🍫", coinCost: 15 },
-  { id: "coffee", name: "Coffee", emoji: "☕", coinCost: 8 },
-  { id: "champagne", name: "Champagne", emoji: "🍾", coinCost: 40 },
-  { id: "ring", name: "Ring", emoji: "💍", coinCost: 150 },
-  { id: "heart", name: "Heart", emoji: "❤️", coinCost: 5 },
-];
+import { GIFT_CATALOG, findGiftById, type GiftDefinition } from "../lib/gifts";
 
 function findGift(giftId: string): GiftDefinition {
-  const gift = GIFT_CATALOG.find((g) => g.id === giftId);
+  const gift = findGiftById(giftId);
   if (!gift) throw new Error(`Unknown gift: ${giftId}`);
   return gift;
 }

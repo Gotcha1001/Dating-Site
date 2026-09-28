@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { normalizeAppearance } from "@/lib/appearance";
 
 export const createOrGet = mutation({
   args: {},
@@ -84,5 +85,33 @@ export const getMe = query({
         .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
         .first()) ?? null
     );
+  },
+});
+
+export const setAppearance = mutation({
+  args: {
+    appearance: v.object({
+      accent: v.string(),
+      rainMode: v.string(),
+      rainDensity: v.number(),
+      rainSpeed: v.number(),
+      rainOpacity: v.number(),
+      glow: v.boolean(),
+    }),
+  },
+  handler: async (ctx, { appearance }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+    if (!existing) throw new Error("User not found");
+
+    // Never trust the client: clamp numbers, reject unknown accent/rain ids.
+    await ctx.db.patch(existing._id, {
+      appearance: normalizeAppearance(appearance),
+    });
   },
 });

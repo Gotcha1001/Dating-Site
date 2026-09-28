@@ -17,6 +17,17 @@ export default defineSchema({
     imageUrl: v.optional(v.string()),
     role: v.union(v.literal("admin"), v.literal("user")),
     createdAt: v.number(),
+    // NEW
+    appearance: v.optional(
+      v.object({
+        accent: v.string(),
+        rainMode: v.string(),
+        rainDensity: v.number(),
+        rainSpeed: v.number(),
+        rainOpacity: v.number(),
+        glow: v.boolean(),
+      }),
+    ),
   }).index("by_clerk_id", ["clerkId"]),
 
   // One row per user, created by the "join" / onboarding form.

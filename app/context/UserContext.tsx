@@ -10,6 +10,14 @@ interface User {
   imageUrl?: string;
   role: "admin" | "user";
   createdAt: number;
+  appearance?: {
+    accent: string;
+    rainMode: string;
+    rainDensity: number;
+    rainSpeed: number;
+    rainOpacity: number;
+    glow: boolean;
+  };
 }
 
 export const UserContext = createContext<User | null>(null);
