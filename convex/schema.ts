@@ -42,10 +42,11 @@ export default defineSchema({
 
   // One row per pair of users who have exchanged at least one message.
   conversations: defineTable({
-    userAId: v.id("users"), // lower-sorted userId of the pair
-    userBId: v.id("users"), // higher-sorted userId of the pair
+    userAId: v.id("users"),
+    userBId: v.id("users"),
     lastMessageAt: v.number(),
     lastMessagePreview: v.optional(v.string()),
+    hiddenFor: v.optional(v.array(v.id("users"))), // NEW
   })
     .index("by_userA", ["userAId"])
     .index("by_userB", ["userBId"])
@@ -57,6 +58,7 @@ export default defineSchema({
     body: v.string(),
     createdAt: v.number(),
     readAt: v.optional(v.number()),
+    deletedFor: v.optional(v.array(v.id("users"))), // NEW
   })
     .index("by_conversation", ["conversationId"])
     .index("by_conversation_unread", ["conversationId", "readAt"]),
