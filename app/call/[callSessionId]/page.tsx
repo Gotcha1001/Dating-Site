@@ -11,7 +11,7 @@ export default async function CallPage({
   const { callSessionId } = await params;
 
   return (
-    <div className="h-[calc(100vh-8rem)] overflow-hidden rounded-2xl">
+    <div className="h-[calc(100dvh-8rem)] overflow-hidden rounded-2xl">
       <VideoCallRoom callSessionId={callSessionId as Id<"callSessions">} />
     </div>
   );
