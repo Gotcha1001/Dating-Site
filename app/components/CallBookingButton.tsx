@@ -61,7 +61,7 @@ export function CallBookingButton({
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-800">
+    <div className="w-full max-w-md rounded-2xl border border-gray-200 p-4 dark:border-gray-800">
       <p className="mb-3 text-sm font-semibold">Book a video call</p>
 
       <button

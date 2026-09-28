@@ -57,10 +57,11 @@ export default defineSchema({
     body: v.string(),
     createdAt: v.number(),
     readAt: v.optional(v.number()),
-  }).index("by_conversation", ["conversationId"]),
+  })
+    .index("by_conversation", ["conversationId"])
+    .index("by_conversation_unread", ["conversationId", "readAt"]),
 
-  // A virtual gift sent from one user to another. The gift catalog itself
-  // (name/emoji/cost) is static data in convex/gifts.ts, not a table.
+  // giftTransactions — add seenAt + index
   giftTransactions: defineTable({
     fromUserId: v.id("users"),
     toUserId: v.id("users"),
@@ -68,9 +69,11 @@ export default defineSchema({
     coinCost: v.number(),
     message: v.optional(v.string()),
     createdAt: v.number(),
+    seenAt: v.optional(v.number()), // set when the recipient opens /gifts
   })
     .index("by_recipient", ["toUserId"])
-    .index("by_sender", ["fromUserId"]),
+    .index("by_sender", ["fromUserId"])
+    .index("by_recipient_unseen", ["toUserId", "seenAt"]),
 
   // Ownership record for every Cloudinary asset a user uploads, so a delete
   // request can be verified as belonging to the caller before we actually
@@ -99,5 +102,15 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_recipient", ["recipientId"])
-    .index("by_requester", ["requesterId"]),
+    .index("by_requester", ["requesterId"])
+    .index("by_recipient_status", ["recipientId", "status"]),
+
+  likes: defineTable({
+    fromUserId: v.id("users"),
+    toUserId: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_sender", ["fromUserId"])
+    .index("by_recipient", ["toUserId"])
+    .index("by_pair", ["fromUserId", "toUserId"]),
 });

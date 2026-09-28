@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { GIFT_CATALOG } from "@/convex/gifts";
-import { Loader2 } from "lucide-react";
-import type { Doc } from "@/convex/_generated/dataModel";
+import { ChevronRight, Loader2 } from "lucide-react";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 
 function gift(giftId: string) {
   return GIFT_CATALOG.find((g) => g.id === giftId);
@@ -12,12 +13,22 @@ function gift(giftId: string) {
 
 function GiftRow({
   transaction,
+  otherUserId,
+  label,
 }: {
   transaction: Doc<"giftTransactions">;
+  // The person on the other end: the sender for received gifts,
+  // the recipient for sent gifts.
+  otherUserId: Id<"users">;
+  label: string;
 }): React.JSX.Element {
   const definition = gift(transaction.giftId);
+
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-3 dark:border-gray-800">
+    <Link
+      href={`/profile/${otherUserId}`}
+      className="group flex items-center gap-3 rounded-xl border border-gray-200 p-3 transition hover:border-rose-500 hover:bg-rose-50 dark:border-gray-800 dark:hover:bg-rose-950/30"
+    >
       <span className="text-2xl">{definition?.emoji ?? "🎁"}</span>
       <div className="min-w-0 flex-1">
         <p className="font-medium">{definition?.name ?? transaction.giftId}</p>
@@ -26,11 +37,15 @@ function GiftRow({
             &ldquo;{transaction.message}&rdquo;
           </p>
         )}
+        <p className="text-xs text-gray-400">
+          {new Date(transaction.createdAt).toLocaleDateString()}
+        </p>
       </div>
-      <span className="text-xs text-gray-400">
-        {new Date(transaction.createdAt).toLocaleDateString()}
+      <span className="flex items-center gap-1 rounded-full border border-rose-500 px-3 py-1 text-xs font-semibold text-rose-600 group-hover:bg-rose-600 group-hover:text-white">
+        {label}
+        <ChevronRight size={14} />
       </span>
-    </div>
+    </Link>
   );
 }
 
@@ -51,7 +66,12 @@ export default function GiftsPage(): React.JSX.Element {
         ) : (
           <div className="space-y-2">
             {received.map((t) => (
-              <GiftRow key={t._id} transaction={t} />
+              <GiftRow
+                key={t._id}
+                transaction={t}
+                otherUserId={t.fromUserId}
+                label="From"
+              />
             ))}
           </div>
         )}
@@ -68,7 +88,12 @@ export default function GiftsPage(): React.JSX.Element {
         ) : (
           <div className="space-y-2">
             {sent.map((t) => (
-              <GiftRow key={t._id} transaction={t} />
+              <GiftRow
+                key={t._id}
+                transaction={t}
+                otherUserId={t.toUserId}
+                label="To"
+              />
             ))}
           </div>
         )}

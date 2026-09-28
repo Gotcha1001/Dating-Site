@@ -8,11 +8,13 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
   Compass,
+  Heart,
   MessageCircle,
   Gift,
   PhoneCall,
@@ -22,6 +24,8 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 interface NavItem {
   href: string;
@@ -31,6 +35,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/discover", label: "Discover", icon: Compass },
+  { href: "/likes", label: "Likes", icon: Heart },
   { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/calls", label: "Call Requests", icon: PhoneCall },
   { href: "/gifts", label: "Gifts", icon: Gift },
@@ -41,6 +46,7 @@ const NAV_ITEMS: NavItem[] = [
 export function AppSidebar(): React.JSX.Element {
   const { user } = useUser();
   const pathname = usePathname();
+  const likesCount = useQuery(api.likes.getLikesCount);
 
   return (
     <Sidebar>
@@ -68,6 +74,13 @@ export function AppSidebar(): React.JSX.Element {
                     <span>{label}</span>
                   </Link>
                 </SidebarMenuButton>
+                {href === "/likes" &&
+                  likesCount !== undefined &&
+                  likesCount > 0 && (
+                    <SidebarMenuBadge className="bg-rose-600 text-white">
+                      {likesCount}
+                    </SidebarMenuBadge>
+                  )}
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
