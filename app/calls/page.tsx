@@ -43,9 +43,13 @@ function CallRow({
         {isIncoming && (
           <>
             <button
-              onClick={() =>
-                respondToCall({ callSessionId: session._id, accept: true })
-              }
+              onClick={async (): Promise<void> => {
+                await respondToCall({
+                  callSessionId: session._id,
+                  accept: true,
+                });
+                router.push(`/call/${session._id}`);
+              }}
               className="rounded-full bg-rose-600 p-2 text-white hover:bg-rose-500"
               aria-label="Accept"
             >

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import {
   ControlBar,
   LiveKitRoom,
@@ -76,11 +76,64 @@ function CallLayout(): React.JSX.Element {
         )}
       </div>
 
-      {/* Its own row, so it can never be pushed out of view */}
       <ControlBar controls={{ chat: false }} className="shrink-0" />
-
-      {/* Without this you can't hear the other person */}
       <RoomAudioRenderer />
+    </div>
+  );
+}
+
+interface CallStatusScreenProps {
+  title: string;
+  subtitle?: string;
+  tone?: "neutral" | "error";
+  actionLabel?: string;
+  onAction?: () => void;
+  secondaryLabel?: string;
+  onSecondary?: () => void;
+  children?: React.ReactNode;
+}
+
+function CallStatusScreen({
+  title,
+  subtitle,
+  tone = "neutral",
+  actionLabel,
+  onAction,
+  secondaryLabel,
+  onSecondary,
+  children,
+}: CallStatusScreenProps): React.JSX.Element {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-3 px-4 text-center">
+      {children}
+      <p
+        className={`text-lg font-medium ${
+          tone === "error" ? "text-red-500" : ""
+        }`}
+      >
+        {title}
+      </p>
+      {subtitle && <p className="text-sm text-gray-400">{subtitle}</p>}
+      <div className="mt-2 flex gap-2">
+        {actionLabel && onAction && (
+          <button
+            type="button"
+            onClick={onAction}
+            className="rounded-full bg-rose-600 px-5 py-2 text-sm font-semibold text-white hover:bg-rose-500"
+          >
+            {actionLabel}
+          </button>
+        )}
+        {secondaryLabel && onSecondary && (
+          <button
+            type="button"
+            onClick={onSecondary}
+            className="rounded-full border border-gray-300 px-5 py-2 text-sm dark:border-gray-700"
+          >
+            {secondaryLabel}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -91,10 +144,18 @@ export function VideoCallRoom({
   const router = useRouter();
   const endCall = useMutation(api.calls.endCall);
 
+  // Live query: re-renders automatically the moment the other person
+  // accepts, declines, or ends the call.
+  const session = useQuery(api.calls.getCallSession, { callSessionId });
+  const status = session?.status;
+
   const [tokenData, setTokenData] = useState<LiveKitTokenResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Only ask for a LiveKit token once the call is actually accepted.
   useEffect(() => {
+    if (status !== "accepted") return;
+
     let cancelled = false;
 
     async function fetchToken(): Promise<void> {
@@ -111,7 +172,10 @@ export function VideoCallRoom({
             "error" in data ? data.error : "Couldn't join the call",
           );
         }
-        if (!cancelled) setTokenData(data);
+        if (!cancelled) {
+          setError(null);
+          setTokenData(data);
+        }
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -125,21 +189,89 @@ export function VideoCallRoom({
     return () => {
       cancelled = true;
     };
-  }, [callSessionId]);
+  }, [callSessionId, status]);
 
   async function handleDisconnect(): Promise<void> {
     await endCall({ callSessionId });
     router.push("/messages");
   }
 
+  async function handleCancel(): Promise<void> {
+    await endCall({ callSessionId });
+    router.push("/calls");
+  }
+
+  // ---- Loading / missing ----
+  if (session === undefined) {
+    return (
+      <div className="flex h-full items-center justify-center text-gray-400">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (session === null) {
+    return (
+      <CallStatusScreen
+        tone="error"
+        title="Call not found"
+        actionLabel="Back to call requests"
+        onAction={(): void => router.push("/calls")}
+      />
+    );
+  }
+
+  // ---- Waiting for the other person ----
+  if (session.status === "pending") {
+    return (
+      <CallStatusScreen
+        title="Calling…"
+        subtitle="Waiting for them to accept. You'll join automatically as soon as they do."
+        actionLabel="Cancel request"
+        onAction={(): void => {
+          void handleCancel();
+        }}
+      >
+        <span className="relative flex h-5 w-5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75 motion-reduce:animate-none" />
+          <span className="relative inline-flex h-5 w-5 rounded-full bg-rose-500" />
+        </span>
+      </CallStatusScreen>
+    );
+  }
+
+  if (session.status === "declined") {
+    return (
+      <CallStatusScreen
+        title="Call declined"
+        subtitle="They can't take the call right now."
+        actionLabel="Back to call requests"
+        onAction={(): void => router.push("/calls")}
+      />
+    );
+  }
+
+  if (session.status === "ended") {
+    return (
+      <CallStatusScreen
+        title="Call ended"
+        actionLabel="Back to messages"
+        onAction={(): void => router.push("/messages")}
+      />
+    );
+  }
+
+  // ---- Accepted: get token, then join ----
   if (error) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-        <p className="text-red-500">{error}</p>
-        <p className="text-sm text-gray-400">
-          The other person may need to accept the call request first.
-        </p>
-      </div>
+      <CallStatusScreen
+        tone="error"
+        title={error}
+        actionLabel="Try again"
+        onAction={(): void => window.location.reload()}
+        secondaryLabel="Back"
+        onSecondary={(): void => router.push("/calls")}
+      />
     );
   }
 
