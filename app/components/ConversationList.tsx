@@ -1,3 +1,4 @@
+// app/components/ConversationList.tsx
 "use client";
 
 import { useQuery } from "convex/react";
@@ -9,18 +10,17 @@ import type { Id } from "@/convex/_generated/dataModel";
 interface ConversationRowProps {
   conversationId: Id<"conversations">;
   otherUserId: Id<"users">;
-  lastMessagePreview?: string;
+  preview: string | undefined;
 }
 
 function ConversationRow({
   conversationId,
   otherUserId,
-  lastMessagePreview,
+  preview,
 }: ConversationRowProps): React.JSX.Element {
   const profile = useQuery(api.profiles.getProfileByUserId, {
     userId: otherUserId,
   });
-
   return (
     <Link
       href={`/messages/${conversationId}`}
@@ -40,7 +40,7 @@ function ConversationRow({
         <p className="truncate font-medium text-black dark:text-white">
           {profile?.displayName ?? "..."}
         </p>
-        <p className="truncate text-xs text-gray-400">{lastMessagePreview}</p>
+        <p className="truncate text-xs text-gray-400">{preview}</p>
       </div>
     </Link>
   );
@@ -67,12 +67,12 @@ export function ConversationList(): React.JSX.Element {
 
   return (
     <div className="space-y-1">
-      {conversations.map(({ conversation, otherUserId }) => (
+      {conversations.map(({ conversation, otherUserId, preview }) => (
         <ConversationRow
           key={conversation._id}
           conversationId={conversation._id}
           otherUserId={otherUserId}
-          lastMessagePreview={conversation.lastMessagePreview}
+          preview={preview}
         />
       ))}
     </div>

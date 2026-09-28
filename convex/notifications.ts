@@ -48,7 +48,9 @@ export const getNavCounts = query({
             q.eq("conversationId", conversation._id).eq("readAt", undefined),
           )
           .collect();
-        return unread.filter((m) => m.senderId !== user._id).length;
+        return unread.filter(
+          (m) => m.senderId !== user._id && !m.deletedFor?.includes(user._id),
+        ).length;
       }),
     );
     const unreadMessages = unreadPerConversation.reduce((a, b) => a + b, 0);
