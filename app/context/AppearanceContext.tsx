@@ -101,6 +101,7 @@ export function AppearanceProvider({
   useEffect(() => {
     latest.current = appearance;
     document.documentElement.dataset.accent = appearance.accent;
+    document.documentElement.dataset.glow = appearance.glow ? "on" : "off";
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(appearance));
     } catch {

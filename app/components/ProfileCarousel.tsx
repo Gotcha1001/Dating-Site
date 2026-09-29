@@ -69,7 +69,7 @@ export function ProfileCarousel({
 
   if (count === 0) {
     return (
-      <div className="relative flex aspect-[4/5] w-full items-center justify-center rounded-2xl bg-gray-100 text-4xl dark:bg-gray-800">
+      <div className="relative aspect-[4/5] w-full select-none overflow-hidden rounded-2xl border bg-gray-100 dark:bg-gray-800 accent-card">
         💫
         {badge && <div className="absolute left-3 top-3 z-10">{badge}</div>}
       </div>
@@ -81,7 +81,7 @@ export function ProfileCarousel({
       role="region"
       aria-roledescription="carousel"
       aria-label={`${alt} photos`}
-      className="relative aspect-[4/5] w-full select-none overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800"
+      className="relative aspect-[4/5] w-full select-none overflow-hidden rounded-2xl border bg-gray-100 dark:bg-gray-800 accent-card"
       onMouseEnter={(): void => setPaused(true)}
       onMouseLeave={(): void => setPaused(false)}
       onTouchStart={handleTouchStart}

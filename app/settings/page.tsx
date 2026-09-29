@@ -14,11 +14,14 @@ import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { useAppearance } from "@/app/context/AppearanceContext";
 
 import {
-  ACCENT_LIST,
+  GRADIENT_ACCENT_LIST,
   RAIN_MODE_LIST,
   RANGE_LIMITS,
+  SOLID_ACCENT_LIST,
+  accentBackground,
   alpha,
   type AccentId,
+  type AccentTheme,
   type RainMode,
 } from "@/lib/appearance";
 
@@ -112,6 +115,96 @@ function RangeRow({
   );
 }
 
+interface AccentGridProps {
+  label: string;
+  swatches: AccentTheme[];
+  selected: AccentId;
+  hovered: AccentId | null;
+  onHover: (id: AccentId | null) => void;
+  onSelect: (id: AccentId) => void;
+  columns: string;
+}
+
+function AccentGrid({
+  label,
+  swatches,
+  selected,
+  hovered,
+  onHover,
+  onSelect,
+  columns,
+}: AccentGridProps): React.JSX.Element {
+  return (
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className={`grid gap-3 ${columns}`}
+    >
+      {swatches.map((swatch) => {
+        const isSelected = selected === swatch.id;
+        const isHovered = hovered === swatch.id;
+        const isGradient = swatch.kind === "gradient";
+        return (
+          <button
+            key={swatch.id}
+            type="button"
+            role="radio"
+            aria-checked={isSelected}
+            onClick={() => onSelect(swatch.id)}
+            onMouseEnter={() => onHover(swatch.id)}
+            onMouseLeave={() => onHover(null)}
+            className="flex flex-col items-center gap-2 rounded-lg border p-3 transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2"
+            style={{
+              borderColor: isSelected
+                ? alpha(swatch.hex400, 0.5)
+                : isHovered
+                  ? alpha(swatch.hex400, 0.25)
+                  : "transparent",
+              backgroundColor: isSelected
+                ? alpha(swatch.hex400, 0.08)
+                : undefined,
+              boxShadow: isSelected
+                ? `0 0 20px -4px ${alpha(swatch.hex400, 0.5)}`
+                : undefined,
+              outlineColor: swatch.hex400,
+            }}
+          >
+            <span
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10"
+              style={{
+                background: accentBackground(swatch),
+                boxShadow:
+                  isSelected || isHovered
+                    ? `0 0 14px 2px ${alpha(swatch.hex400, isSelected ? 0.65 : 0.45)}`
+                    : "inset 0 1px 2px rgba(0,0,0,0.3)",
+              }}
+            >
+              {isSelected && (
+                <Check
+                  className={
+                    isGradient
+                      ? "h-4 w-4 text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.7)]"
+                      : "h-4 w-4 text-black/70"
+                  }
+                  strokeWidth={3}
+                />
+              )}
+            </span>
+            <span
+              className="text-center text-[11px] font-medium leading-tight text-slate-600 dark:text-stone-300"
+              style={{
+                color: isSelected || isHovered ? swatch.hex400 : undefined,
+              }}
+            >
+              {swatch.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function SettingsPage(): React.JSX.Element {
   const { appearance, theme, update, reset, isSaving } = useAppearance();
   const { hex400 } = theme;
@@ -123,7 +216,7 @@ export default function SettingsPage(): React.JSX.Element {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1
-            className="text-2xl font-black tracking-tight text-slate-900 dark:text-stone-50"
+            className="accent-gradient-text text-2xl font-black tracking-tight"
             style={{ filter: `drop-shadow(0 0 16px ${alpha(hex400, 0.4)})` }}
           >
             Settings
@@ -154,68 +247,34 @@ export default function SettingsPage(): React.JSX.Element {
       {/* Accent color */}
       <Card
         title="Accent color"
-        description="Used for highlights, glow and the rain across the whole app."
+        description="Used for highlights, glow, the sidebar and the rain across the whole app. Gradients tint the sidebar and rain with several colors."
         hex={hex400}
       >
-        <div
-          role="radiogroup"
-          aria-label="Accent color"
-          className="grid grid-cols-3 gap-3 sm:grid-cols-6"
-        >
-          {ACCENT_LIST.map((swatch) => {
-            const isSelected = appearance.accent === swatch.id;
-            const isHovered = hoveredAccent === swatch.id;
-            return (
-              <button
-                key={swatch.id}
-                type="button"
-                role="radio"
-                aria-checked={isSelected}
-                onClick={() => update({ accent: swatch.id })}
-                onMouseEnter={() => setHoveredAccent(swatch.id)}
-                onMouseLeave={() => setHoveredAccent(null)}
-                className="flex flex-col items-center gap-2 rounded-lg border p-3 transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2"
-                style={{
-                  borderColor: isSelected
-                    ? alpha(swatch.hex400, 0.5)
-                    : isHovered
-                      ? alpha(swatch.hex400, 0.25)
-                      : "transparent",
-                  backgroundColor: isSelected
-                    ? alpha(swatch.hex400, 0.08)
-                    : undefined,
-                  boxShadow: isSelected
-                    ? `0 0 20px -4px ${alpha(swatch.hex400, 0.5)}`
-                    : undefined,
-                  outlineColor: swatch.hex400,
-                }}
-              >
-                <span
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10"
-                  style={{
-                    backgroundColor: swatch.hex400,
-                    boxShadow:
-                      isSelected || isHovered
-                        ? `0 0 14px 2px ${alpha(swatch.hex400, isSelected ? 0.65 : 0.45)}`
-                        : "inset 0 1px 2px rgba(0,0,0,0.3)",
-                  }}
-                >
-                  {isSelected && (
-                    <Check className="h-4 w-4 text-black/70" strokeWidth={3} />
-                  )}
-                </span>
-                <span
-                  className="text-center text-[11px] font-medium leading-tight text-slate-600 dark:text-stone-300"
-                  style={{
-                    color: isSelected || isHovered ? swatch.hex400 : undefined,
-                  }}
-                >
-                  {swatch.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-stone-400">
+          Solid
+        </p>
+        <AccentGrid
+          label="Solid accent colors"
+          swatches={SOLID_ACCENT_LIST}
+          selected={appearance.accent}
+          hovered={hoveredAccent}
+          onHover={setHoveredAccent}
+          onSelect={(accent) => update({ accent })}
+          columns="grid-cols-3 sm:grid-cols-6"
+        />
+
+        <p className="mb-2 mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-stone-400">
+          Gradients
+        </p>
+        <AccentGrid
+          label="Gradient accent colors"
+          swatches={GRADIENT_ACCENT_LIST}
+          selected={appearance.accent}
+          hovered={hoveredAccent}
+          onHover={setHoveredAccent}
+          onSelect={(accent) => update({ accent })}
+          columns="grid-cols-3 sm:grid-cols-5"
+        />
       </Card>
 
       {/* Rain */}

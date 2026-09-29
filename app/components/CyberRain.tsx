@@ -17,6 +17,8 @@ interface Drop {
   glyphs: string[];
   /** Hearts sway sideways; this offsets each heart's sine wave. */
   phase: number;
+  /** Index into the rain palette (gradient accents use several colors). */
+  tone: number;
 }
 
 const CODE_GLYPHS: string[] = "01♥♡✦◇SPARK".split("");
@@ -40,7 +42,9 @@ function createDrop(
   width: number,
   height: number,
   scatter: boolean,
+  paletteSize: number,
 ): Drop {
+  const tone = Math.floor(Math.random() * paletteSize);
   // scatter = true fills the whole screen on first paint; false starts drops
   // just above the top edge so they enter naturally.
   const startY = (trail: number): number =>
@@ -57,6 +61,7 @@ function createDrop(
       size,
       glyphs: Array.from({ length }, () => pick(CODE_GLYPHS)),
       phase: 0,
+      tone,
     };
   }
 
@@ -70,6 +75,7 @@ function createDrop(
       size,
       glyphs: [pick(HEART_GLYPHS)],
       phase: rand(0, Math.PI * 2),
+      tone,
     };
   }
 
@@ -82,6 +88,7 @@ function createDrop(
     size: rand(1, 2),
     glyphs: [],
     phase: 0,
+    tone,
   };
 }
 
@@ -92,7 +99,8 @@ function dropCount(width: number, density: number): number {
 }
 
 /**
- * Full-screen, click-through rain layer. Mount once in the root layout.
+ * Click-through rain layer that fills its nearest `relative` parent.
+ * Mount it inside the page-content wrapper, not over the sidebar.
  * Reads mode/density/speed/brightness/glow from the Appearance context and
  * tints everything with the chosen accent color.
  */
@@ -118,6 +126,13 @@ export function CyberRain(): React.JSX.Element | null {
     if (motion.matches) return;
 
     const speedMultiplier = 0.4 + (rainSpeed / 100) * 2.2;
+
+    // Gradient accents rain in all three gradient colors (dark mode only:
+    // pastel stops would vanish on a white page, so light mode stays solid).
+    const palette: string[] =
+      isDark && theme.gradient
+        ? [theme.gradient.from, theme.gradient.via, theme.gradient.to]
+        : [mainColor];
     let width = 0;
     let height = 0;
     let drops: Drop[] = [];
@@ -126,28 +141,31 @@ export function CyberRain(): React.JSX.Element | null {
 
     const seed = (scatter: boolean): void => {
       drops = Array.from({ length: dropCount(width, rainDensity) }, () =>
-        createDrop(rainMode, width, height, scatter),
+        createDrop(rainMode, width, height, scatter, palette.length),
       );
     };
 
     const resize = (): void => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      width = window.innerWidth;
-      height = window.innerHeight;
+      // Size to the canvas' own box (the page area), not the whole window,
+      // so the rain never spills over the sidebar.
+      width = canvas.clientWidth;
+      height = canvas.clientHeight;
+      if (width === 0 || height === 0) return;
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       seed(true);
     };
 
-    const drawCode = (drop: Drop): void => {
+    const drawCode = (drop: Drop, color: string): void => {
       ctx.font = `${drop.size}px var(--font-geist-mono), ui-monospace, monospace`;
       ctx.textBaseline = "top";
       for (let i = 0; i < drop.length; i++) {
         const y = drop.y - i * drop.size;
         if (y < -drop.size || y > height) continue;
         ctx.globalAlpha = i === 0 ? 1 : Math.max(0, 1 - i / drop.length) * 0.8;
-        ctx.fillStyle = i === 0 ? headColor : mainColor;
+        ctx.fillStyle = i === 0 ? headColor : color;
         ctx.fillText(drop.glyphs[i] ?? "0", drop.x, y);
       }
       // Occasionally swap a glyph so the trail shimmers as it falls.
@@ -157,21 +175,21 @@ export function CyberRain(): React.JSX.Element | null {
       }
     };
 
-    const drawHeart = (drop: Drop, time: number): void => {
+    const drawHeart = (drop: Drop, time: number, color: string): void => {
       const sway = Math.sin(time / 1400 + drop.phase) * 14;
       ctx.font = `${drop.size}px sans-serif`;
       ctx.textBaseline = "top";
       ctx.globalAlpha = 0.85;
-      ctx.fillStyle = mainColor;
+      ctx.fillStyle = color;
       ctx.fillText(drop.glyphs[0] ?? "♥", drop.x + sway, drop.y);
     };
 
-    const drawNeon = (drop: Drop): void => {
+    const drawNeon = (drop: Drop, color: string): void => {
       const tailX = drop.x - drop.length * NEON_SLANT;
       const tailY = drop.y - drop.length;
       const gradient = ctx.createLinearGradient(tailX, tailY, drop.x, drop.y);
       gradient.addColorStop(0, "rgba(0,0,0,0)");
-      gradient.addColorStop(1, mainColor);
+      gradient.addColorStop(1, color);
       ctx.globalAlpha = 0.9;
       ctx.strokeStyle = gradient;
       ctx.lineWidth = drop.size;
@@ -187,7 +205,6 @@ export function CyberRain(): React.JSX.Element | null {
       last = now;
 
       ctx.clearRect(0, 0, width, height);
-      ctx.shadowColor = mainColor;
       ctx.shadowBlur = glow ? 8 : 0;
 
       for (let i = 0; i < drops.length; i++) {
@@ -199,29 +216,44 @@ export function CyberRain(): React.JSX.Element | null {
           drop.x += drop.speed * speedMultiplier * dt * NEON_SLANT;
 
         if (drop.y - trailPixels(drop, rainMode) > height) {
-          drops[i] = createDrop(rainMode, width, height, false);
+          drops[i] = createDrop(rainMode, width, height, false, palette.length);
           continue;
         }
 
-        if (rainMode === "code") drawCode(drop);
-        else if (rainMode === "hearts") drawHeart(drop, now);
-        else drawNeon(drop);
+        const color = palette[drop.tone % palette.length] ?? mainColor;
+        ctx.shadowColor = color;
+
+        if (rainMode === "code") drawCode(drop, color);
+        else if (rainMode === "hearts") drawHeart(drop, now, color);
+        else drawNeon(drop, color);
       }
 
       ctx.globalAlpha = 1;
       frame = requestAnimationFrame(tick);
     };
 
-    resize();
-    window.addEventListener("resize", resize);
+    // ResizeObserver also fires when the sidebar opens/closes, which a plain
+    // window "resize" listener would miss. It fires once on observe(), so no
+    // separate initial resize() call is needed.
+    const observer = new ResizeObserver(resize);
+    observer.observe(canvas);
     frame = requestAnimationFrame(tick);
 
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener("resize", resize);
+      observer.disconnect();
       ctx.clearRect(0, 0, width, height);
     };
-  }, [rainMode, rainDensity, rainSpeed, glow, mainColor, headColor]);
+  }, [
+    rainMode,
+    rainDensity,
+    rainSpeed,
+    glow,
+    mainColor,
+    headColor,
+    isDark,
+    theme,
+  ]);
 
   if (rainMode === "off") return null;
 
@@ -229,7 +261,7 @@ export function CyberRain(): React.JSX.Element | null {
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-30 h-screen w-screen"
+      className="pointer-events-none absolute inset-0 z-30 h-full w-full"
       style={{ opacity: appearance.rainOpacity / 100 }}
     />
   );

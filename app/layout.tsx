@@ -12,6 +12,7 @@ import Provider from "./provider";
 import { AppSidebar } from "@/app/components/Appsidebar";
 import { PresenceHeartbeat } from "./components/PresenceHeartbeat";
 import { AppearanceProvider } from "./context/AppearanceContext";
+import { CyberRain } from "./components/CyberRain";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -45,9 +46,14 @@ export default function RootLayout({
                       <Navbar />
                       <div className="flex flex-1 overflow-hidden">
                         <AppSidebar />
-                        <SidebarInset className="flex-1 overflow-auto">
-                          <main className="p-4 lg:p-6">{children}</main>
-                        </SidebarInset>
+
+                        {/* Rain lives inside this wrapper, so it can't reach the sidebar */}
+                        <div className="relative flex min-w-0 flex-1 overflow-hidden">
+                          <CyberRain />
+                          <SidebarInset className="flex-1 overflow-auto">
+                            <main className="p-4 lg:p-6">{children}</main>
+                          </SidebarInset>
+                        </div>
                       </div>
                     </div>
                   </SidebarProvider>

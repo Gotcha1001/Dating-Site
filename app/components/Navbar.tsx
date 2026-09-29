@@ -3,16 +3,18 @@
 
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
-import { motion } from "framer-motion";
-import { Gift, MessageCircle, Phone } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Gift, Heart, MessageCircle, Phone } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { api } from "@/convex/_generated/api";
 import type { IncomingCall } from "@/convex/notifications";
 import { useNow } from "@/hooks/useNow";
+import { useAppearance } from "@/app/context/AppearanceContext";
+import { accentBackground, alpha, type AccentTheme } from "@/lib/appearance";
 import { ThemeToggle } from "./ThemeToggle";
 
 // A "call now" request only counts as ringing for this long; after that it's
@@ -46,7 +48,7 @@ function NavIconLink({
       href={href}
       aria-label={count > 0 ? `${label} (${count})` : label}
       title={label}
-      className="relative rounded-full p-2 text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+      className="relative rounded-full p-2 text-gray-700 hover:bg-rose-500/10 dark:text-gray-200 dark:hover:bg-rose-500/20"
     >
       {children}
       <CountBadge count={count} />
@@ -144,34 +146,231 @@ function NavNotifications(): React.JSX.Element | null {
   );
 }
 
+/* ------------------------------ animated brand ------------------------------ */
+
+const ORBIT_TOKENS = [
+  { label: "like", radius: 20, duration: 7, delay: 0, startAngle: 20 },
+  { label: "chat", radius: 20, duration: 7, delay: 3.5, startAngle: 200 },
+];
+
+const flicker = {
+  opacity: [0.55, 0.9, 0.5, 1, 0.6, 0.85, 0.55],
+  scale: [0.95, 1.05, 0.92, 1.1, 0.97, 1.04, 0.95],
+};
+
+/** Tiled HUD grid as an SVG data-URI, drawn in the accent color. */
+function hudGridBackground(hex: string): string {
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48'>` +
+    `<path d='M48 0H0V48' fill='none' stroke='${hex}' stroke-width='1' opacity='0.5'/>` +
+    `<circle cx='0' cy='0' r='1.5' fill='${hex}'/></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+function BrandMark({ theme }: { theme: AccentTheme }): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
+  const { hex400, shades } = theme;
+
+  const spin = (reverse = false) =>
+    reduceMotion ? undefined : { rotate: reverse ? -360 : 360 };
+  const spinTransition = (duration: number) =>
+    reduceMotion
+      ? { duration: 0 }
+      : { duration, repeat: Infinity, ease: "linear" as const };
+
+  return (
+    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
+      {/* Words orbiting the mark */}
+      {!reduceMotion &&
+        ORBIT_TOKENS.map((t) => (
+          <motion.span
+            key={t.label}
+            className="pointer-events-none absolute font-mono text-[8px] font-medium uppercase tracking-wide"
+            style={{
+              left: "50%",
+              top: "50%",
+              color: shades[300],
+              opacity: 0.8,
+            }}
+            animate={{
+              x: Array.from({ length: 13 }, (_, i) => {
+                const angle = ((t.startAngle + (i / 12) * 360) * Math.PI) / 180;
+                return Math.cos(angle) * t.radius;
+              }),
+              y: Array.from({ length: 13 }, (_, i) => {
+                const angle = ((t.startAngle + (i / 12) * 360) * Math.PI) / 180;
+                return Math.sin(angle) * t.radius;
+              }),
+              opacity: [0, 1, 1, 1, 0],
+            }}
+            transition={{
+              duration: t.duration,
+              delay: t.delay,
+              repeat: Infinity,
+              ease: "linear",
+              opacity: {
+                duration: t.duration,
+                delay: t.delay,
+                repeat: Infinity,
+                times: [0, 0.08, 0.5, 0.92, 1],
+              },
+            }}
+          >
+            {t.label}
+          </motion.span>
+        ))}
+
+      {/* Counter-rotating rings */}
+      <motion.div
+        className="absolute inset-0 rounded-full border border-dashed"
+        style={{ borderColor: alpha(hex400, 0.4) }}
+        animate={spin()}
+        transition={spinTransition(10)}
+      />
+      <motion.div
+        className="absolute inset-1 rounded-full border"
+        style={{ borderColor: alpha(shades[600], 0.4) }}
+        animate={spin(true)}
+        transition={spinTransition(6.5)}
+      />
+
+      {/* Pulse ring */}
+      <motion.div
+        className="absolute inset-0 rounded-full border-2"
+        style={{ borderColor: alpha(shades[300], 0.3) }}
+        animate={
+          reduceMotion
+            ? undefined
+            : { scale: [1, 1.35, 1], opacity: [0.6, 0, 0.6] }
+        }
+        transition={{ duration: 1.8, repeat: Infinity }}
+      />
+
+      {/* Flickering glow */}
+      <motion.div
+        className="absolute h-5 w-5 rounded-full blur-md"
+        style={{ backgroundColor: shades[300] }}
+        animate={reduceMotion ? undefined : flicker}
+        transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Core: accent gradient + heart */}
+      <div
+        className="relative flex h-6 w-6 items-center justify-center rounded-full border"
+        style={{
+          borderColor: alpha(hex400, 0.5),
+          background: accentBackground(theme),
+          boxShadow: `0 0 12px -2px ${alpha(hex400, 0.9)}`,
+        }}
+      >
+        <Heart className="h-3 w-3 fill-white text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]" />
+      </div>
+    </div>
+  );
+}
+
+/* --------------------------------- navbar --------------------------------- */
+
 export default function Navbar(): React.JSX.Element {
+  const reduceMotion = useReducedMotion();
+  const { theme } = useAppearance();
+  const { hex400, shades } = theme;
+  const gridBg = useMemo(() => hudGridBackground(hex400), [hex400]);
+
   return (
     <motion.nav
-      className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 shadow-sm dark:border-green-900/30 dark:bg-gradient-to-r dark:from-gray-900 dark:via-gray-950 dark:to-gray-900"
+      className="relative grid grid-cols-3 items-center overflow-hidden border-b bg-white px-6 py-4 shadow-sm dark:bg-[#04070a]"
+      style={{ borderColor: alpha(hex400, 0.15) }}
       initial={{ y: -40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4 }}
     >
-      <SidebarTrigger className="mr-2 md:hidden" />
-      <Link
-        href="/"
-        className="text-xl font-black tracking-tight text-black dark:text-white"
-      >
-        🟢 <span className="text-red-500">GREMLIN</span>{" "}
-        <span className="text-green-500">INC.</span>
-      </Link>
-      <div className="flex items-center gap-2">
+      {/* HUD background (dark mode) */}
+      <div className="pointer-events-none absolute inset-0 hidden dark:block">
+        <div
+          className="absolute inset-0 opacity-25"
+          style={{
+            backgroundImage: `url("${gridBg}")`,
+            backgroundSize: "48px 48px",
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at top, color-mix(in oklab, var(--accent-from) 18%, #04070a) 0%, #04070a 70%)",
+          }}
+        />
+        <div
+          className="absolute inset-x-0 bottom-0 h-px"
+          style={{
+            background: `linear-gradient(to right, transparent, ${alpha(hex400, 0.4)}, transparent)`,
+          }}
+        />
+        {/* Corner brackets */}
+        {[
+          "-left-px -top-px border-l-2 border-t-2",
+          "-right-px -top-px border-r-2 border-t-2",
+          "-left-px -bottom-px border-l-2 border-b-2",
+          "-right-px -bottom-px border-r-2 border-b-2",
+        ].map((cls) => (
+          <div
+            key={cls}
+            className={`absolute ${cls} h-3.5 w-3.5`}
+            style={{ borderColor: alpha(hex400, 0.45) }}
+          />
+        ))}
+        {/* Scanning line */}
+        {!reduceMotion && (
+          <motion.div
+            className="absolute bottom-0 top-0 w-px"
+            style={{
+              background: `linear-gradient(to bottom, transparent, ${alpha(shades[300], 0.35)}, transparent)`,
+            }}
+            animate={{ left: ["0%", "100%"] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+          />
+        )}
+      </div>
+
+      {/* Left: sidebar trigger (mobile) */}
+      <div className="relative z-10 justify-self-start">
+        <SidebarTrigger className="text-slate-700 md:hidden dark:text-stone-300" />
+      </div>
+
+      {/* Center: brand */}
+      <div className="relative z-10 justify-self-center">
+        <Link href="/" className="flex items-center gap-4">
+          <BrandMark theme={theme} />
+          <span
+            className="accent-gradient-text text-lg font-black tracking-tight"
+            style={{ filter: `drop-shadow(0 0 10px ${alpha(hex400, 0.35)})` }}
+          >
+            Spark
+          </span>
+        </Link>
+      </div>
+
+      {/* Right: actions */}
+      <div className="relative z-10 flex items-center gap-2 justify-self-end">
         <SignedOut>
           <Link href="/sign-in">
             <Button
               variant="ghost"
-              className="text-gray-700 hover:text-red-600 dark:text-gray-200"
+              className="text-slate-700 dark:text-stone-200"
             >
               Sign In
             </Button>
           </Link>
           <Link href="/sign-up">
-            <Button className="bg-red-600 text-white hover:bg-red-500 dark:bg-red-700">
+            <Button
+              className="border text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.45)] hover:opacity-90"
+              style={{
+                borderColor: alpha(hex400, 0.4),
+                background: accentBackground(theme),
+                boxShadow: `0 0 20px -6px ${alpha(hex400, 0.6)}`,
+              }}
+            >
               Sign Up
             </Button>
           </Link>
