@@ -10,12 +10,24 @@
 /* ---------------------------------- accents --------------------------------- */
 
 export const ACCENT_IDS = [
+  // solid
   "pink",
   "cyan",
   "violet",
   "lime",
   "amber",
   "blue",
+  // gradient
+  "sunset",
+  "ocean",
+  "aurora",
+  "cotton",
+  "inferno",
+  "emerald",
+  "galaxy",
+  "rosegold",
+  "synthwave",
+  "crimson",
 ] as const;
 
 export type AccentId = (typeof ACCENT_IDS)[number];
@@ -28,17 +40,30 @@ export interface AccentShades {
   700: string;
 }
 
+/** Three color stops, used for gradient accents (sidebar, swatches, rain). */
+export interface AccentGradient {
+  from: string;
+  via: string;
+  to: string;
+}
+
 export interface AccentTheme {
   id: AccentId;
   label: string;
+  kind: "solid" | "gradient";
+  /** Main UI color. For gradients this is a mid-tone of the gradient. */
   hex400: string;
+  /** Single-hue shades: text, borders, glow and the rose-* remap use these. */
   shades: AccentShades;
+  /** Present only on gradient accents. */
+  gradient?: AccentGradient;
 }
 
 export const ACCENT_THEMES: Record<AccentId, AccentTheme> = {
   pink: {
     id: "pink",
     label: "Neon pink",
+    kind: "solid",
     hex400: "#f472b6",
     shades: {
       300: "#f9a8d4",
@@ -51,6 +76,7 @@ export const ACCENT_THEMES: Record<AccentId, AccentTheme> = {
   cyan: {
     id: "cyan",
     label: "Cyber cyan",
+    kind: "solid",
     hex400: "#22d3ee",
     shades: {
       300: "#67e8f9",
@@ -63,6 +89,7 @@ export const ACCENT_THEMES: Record<AccentId, AccentTheme> = {
   violet: {
     id: "violet",
     label: "Ultraviolet",
+    kind: "solid",
     hex400: "#a78bfa",
     shades: {
       300: "#c4b5fd",
@@ -75,6 +102,7 @@ export const ACCENT_THEMES: Record<AccentId, AccentTheme> = {
   lime: {
     id: "lime",
     label: "Acid lime",
+    kind: "solid",
     hex400: "#a3e635",
     shades: {
       300: "#bef264",
@@ -87,6 +115,7 @@ export const ACCENT_THEMES: Record<AccentId, AccentTheme> = {
   amber: {
     id: "amber",
     label: "Sodium amber",
+    kind: "solid",
     hex400: "#fbbf24",
     shades: {
       300: "#fcd34d",
@@ -99,6 +128,7 @@ export const ACCENT_THEMES: Record<AccentId, AccentTheme> = {
   blue: {
     id: "blue",
     label: "Electric blue",
+    kind: "solid",
     hex400: "#60a5fa",
     shades: {
       300: "#93c5fd",
@@ -108,11 +138,170 @@ export const ACCENT_THEMES: Record<AccentId, AccentTheme> = {
       700: "#1d4ed8",
     },
   },
+  sunset: {
+    id: "sunset",
+    label: "Sunset",
+    kind: "gradient",
+    hex400: "#fb8f6b",
+    shades: {
+      300: "#fdba9f",
+      400: "#fb8f6b",
+      500: "#f97350",
+      600: "#ea5a35",
+      700: "#c2410c",
+    },
+    gradient: { from: "#f97316", via: "#ec4899", to: "#8b5cf6" },
+  },
+  ocean: {
+    id: "ocean",
+    label: "Deep ocean",
+    kind: "gradient",
+    hex400: "#38bdf8",
+    shades: {
+      300: "#7dd3fc",
+      400: "#38bdf8",
+      500: "#0ea5e9",
+      600: "#0284c7",
+      700: "#0369a1",
+    },
+    gradient: { from: "#22d3ee", via: "#3b82f6", to: "#6366f1" },
+  },
+  aurora: {
+    id: "aurora",
+    label: "Aurora",
+    kind: "gradient",
+    hex400: "#2dd4bf",
+    shades: {
+      300: "#5eead4",
+      400: "#2dd4bf",
+      500: "#14b8a6",
+      600: "#0d9488",
+      700: "#0f766e",
+    },
+    gradient: { from: "#34d399", via: "#22d3ee", to: "#a78bfa" },
+  },
+  cotton: {
+    id: "cotton",
+    label: "Cotton candy",
+    kind: "gradient",
+    hex400: "#e879f9",
+    shades: {
+      300: "#f0abfc",
+      400: "#e879f9",
+      500: "#d946ef",
+      600: "#c026d3",
+      700: "#a21caf",
+    },
+    gradient: { from: "#f9a8d4", via: "#c4b5fd", to: "#93c5fd" },
+  },
+  inferno: {
+    id: "inferno",
+    label: "Inferno",
+    kind: "gradient",
+    hex400: "#fb923c",
+    shades: {
+      300: "#fdba74",
+      400: "#fb923c",
+      500: "#f97316",
+      600: "#ea580c",
+      700: "#c2410c",
+    },
+    gradient: { from: "#facc15", via: "#f97316", to: "#ef4444" },
+  },
+  emerald: {
+    id: "emerald",
+    label: "Emerald",
+    kind: "gradient",
+    hex400: "#4ade80",
+    shades: {
+      300: "#86efac",
+      400: "#4ade80",
+      500: "#22c55e",
+      600: "#16a34a",
+      700: "#15803d",
+    },
+    gradient: { from: "#a3e635", via: "#22c55e", to: "#0d9488" },
+  },
+  galaxy: {
+    id: "galaxy",
+    label: "Galaxy",
+    kind: "gradient",
+    hex400: "#818cf8",
+    shades: {
+      300: "#a5b4fc",
+      400: "#818cf8",
+      500: "#6366f1",
+      600: "#4f46e5",
+      700: "#4338ca",
+    },
+    gradient: { from: "#6366f1", via: "#8b5cf6", to: "#d946ef" },
+  },
+  rosegold: {
+    id: "rosegold",
+    label: "Rose gold",
+    kind: "gradient",
+    hex400: "#e9a397",
+    shades: {
+      300: "#f5c2b8",
+      400: "#e9a397",
+      500: "#d98a7b",
+      600: "#c06f61",
+      700: "#9f5347",
+    },
+    gradient: { from: "#fbd3c5", via: "#e8a598", to: "#b76e79" },
+  },
+  synthwave: {
+    id: "synthwave",
+    label: "Synthwave",
+    kind: "gradient",
+    hex400: "#c084fc",
+    shades: {
+      300: "#d8b4fe",
+      400: "#c084fc",
+      500: "#a855f7",
+      600: "#9333ea",
+      700: "#7e22ce",
+    },
+    gradient: { from: "#ff2e97", via: "#a855f7", to: "#00e5ff" },
+  },
+  crimson: {
+    id: "crimson",
+    label: "Crimson night",
+    kind: "gradient",
+    hex400: "#f87171",
+    shades: {
+      300: "#fca5a5",
+      400: "#f87171",
+      500: "#ef4444",
+      600: "#dc2626",
+      700: "#b91c1c",
+    },
+    gradient: { from: "#ef4444", via: "#be185d", to: "#6d28d9" },
+  },
 };
 
 export const ACCENT_LIST: AccentTheme[] = ACCENT_IDS.map(
   (id) => ACCENT_THEMES[id],
 );
+
+export const SOLID_ACCENT_LIST: AccentTheme[] = ACCENT_LIST.filter(
+  (t) => t.kind === "solid",
+);
+
+export const GRADIENT_ACCENT_LIST: AccentTheme[] = ACCENT_LIST.filter(
+  (t) => t.kind === "gradient",
+);
+
+/**
+ * A CSS `background` value for swatches and highlights: a linear-gradient for
+ * gradient accents, or the plain hex400 color for solid ones.
+ */
+export function accentBackground(theme: AccentTheme, angle = 135): string {
+  const g = theme.gradient;
+  return g
+    ? `linear-gradient(${angle}deg, ${g.from}, ${g.via}, ${g.to})`
+    : theme.hex400;
+}
 
 export function isAccentId(value: unknown): value is AccentId {
   return (

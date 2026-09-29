@@ -23,7 +23,7 @@ export function ProfileCard({
     <div className="group relative">
       <Link
         href={`/profile/${profile.userId}`}
-        className="block overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-lg dark:border-gray-800 dark:bg-gray-900"
+        className="block overflow-hidden rounded-2xl border bg-white shadow-sm transition dark:bg-gray-900 accent-card"
       >
         <div className="relative aspect-[4/5] w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
           {mainPhoto ? (

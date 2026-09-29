@@ -27,7 +27,7 @@ function GiftRow({
   return (
     <Link
       href={`/profile/${otherUserId}`}
-      className="group flex items-center gap-3 rounded-xl border border-gray-200 p-3 transition hover:border-rose-500 hover:bg-rose-50 dark:border-gray-800 dark:hover:bg-rose-950/30"
+      className="group flex items-center gap-3 rounded-xl border p-3 transition accent-card"
     >
       <span className="text-2xl">{definition?.emoji ?? "🎁"}</span>
       <div className="min-w-0 flex-1">

@@ -54,10 +54,12 @@ export function AppSidebar(): React.JSX.Element {
         <div className="flex items-center gap-2 px-3 py-3">
           <span className="text-2xl">💫</span>
           <div>
-            <p className="text-sm font-black text-black dark:text-white">
+            <p className="text-sm font-black text-sidebar-foreground">
               <span className="text-rose-500">SPARK</span>
             </p>
-            <p className="text-[10px] text-gray-400">Meet someone real</p>
+            <p className="text-[10px] text-sidebar-foreground/60">
+              Meet someone real
+            </p>
           </div>
         </div>
       </SidebarHeader>
@@ -89,16 +91,16 @@ export function AppSidebar(): React.JSX.Element {
 
       <SidebarFooter>
         {user && (
-          <div className="px-3 py-2 border-t border-gray-200 dark:border-gray-800">
+          <div className="px-3 py-2 border-t border-sidebar-border">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-rose-600 flex items-center justify-center text-sm">
                 💫
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-black dark:text-white truncate">
+                <p className="text-xs font-semibold text-sidebar-foreground truncate">
                   {user.fullName ?? user.username}
                 </p>
-                <p className="text-[10px] text-gray-400 truncate">
+                <p className="text-[10px] text-sidebar-foreground/60 truncate">
                   {user.primaryEmailAddress?.emailAddress}
                 </p>
               </div>
