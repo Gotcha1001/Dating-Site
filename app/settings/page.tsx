@@ -24,6 +24,7 @@ import {
   type AccentTheme,
   type RainMode,
 } from "@/lib/appearance";
+import { TokenPackages } from "../components/TokenPackages";
 
 const RAIN_ICONS: Record<RainMode, typeof Binary> = {
   code: Binary,
@@ -242,6 +243,17 @@ export default function SettingsPage(): React.JSX.Element {
             Reset to defaults
           </button>
         </div>
+      </div>
+
+      {/* Buy tokens */}
+      <div id="tokens" className="scroll-mt-6">
+        <Card
+          title="Buy tokens"
+          description="Tokens are used for gifts and video calls. Pick a package and pay securely with PayFast."
+          hex={hex400}
+        >
+          <TokenPackages />
+        </Card>
       </div>
 
       {/* Accent color */}
