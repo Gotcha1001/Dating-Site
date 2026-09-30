@@ -20,6 +20,7 @@ import {
   PhoneCall,
   User,
   Settings,
+  Coins,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -40,6 +41,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/calls", label: "Call Requests", icon: PhoneCall },
   { href: "/gifts", label: "Gifts", icon: Gift },
   { href: "/profile", label: "My Profile", icon: User },
+  { href: "/tokens", label: "Tokens", icon: Coins },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

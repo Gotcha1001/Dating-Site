@@ -17,6 +17,7 @@ import type * as likes from "../likes.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
 import type * as profiles from "../profiles.js";
+import type * as tokens from "../tokens.js";
 import type * as uploads from "../uploads.js";
 import type * as user from "../user.js";
 
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   notifications: typeof notifications;
   profiles: typeof profiles;
+  tokens: typeof tokens;
   uploads: typeof uploads;
   user: typeof user;
 }>;

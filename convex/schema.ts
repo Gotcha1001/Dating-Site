@@ -126,4 +126,34 @@ export default defineSchema({
     .index("by_sender", ["fromUserId"])
     .index("by_recipient", ["toUserId"])
     .index("by_pair", ["fromUserId", "toUserId"]),
+  // convex/schema.ts  --  ADD these two tables inside defineSchema({ ... }),
+  // next to giftTransactions / likes. Nothing existing changes.
+
+  // One row per "Buy tokens" click. Created (pending) by the checkout route
+  // BEFORE the user is sent to PayFast; the row id is what we send PayFast as
+  // m_payment_id, so the ITN webhook can find it again with no parsing.
+  tokenPurchases: defineTable({
+    userId: v.id("users"),
+    packageId: v.string(),
+    tokens: v.number(),
+    priceCents: v.number(),
+    status: v.union(v.literal("pending"), v.literal("paid")),
+    createdAt: v.number(),
+    paidAt: v.optional(v.number()),
+    payfastPaymentId: v.optional(v.string()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_payfastPaymentId", ["payfastPaymentId"]),
+
+  // Anything PayFast told us about that we could NOT turn into tokens
+  // (failed/cancelled ITN, amount mismatch). Same shape as the resort site.
+  failedPayments: defineTable({
+    paymentId: v.string(),
+    purchaseId: v.optional(v.id("tokenPurchases")),
+    status: v.string(),
+    amount: v.number(),
+    reason: v.string(),
+    timestamp: v.number(),
+    resolved: v.boolean(),
+  }),
 });
